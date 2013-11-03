@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="js/dojo/dojo.js.uncompressed.js"></script>
+    <script type="text/javascript">
+        require(["zeos/pubSub"], function(PubSub) {
+            var ps = new PubSub();
+            ps.configure("http://localhost:8080/comet-server/cometd", {
+                initialized: function(success, clientId, err, msg) {
+                    console.log("init", success, clientId, err, msg);
+                },
+                connected: function() {
+                    console.log("connected");
+                    ps.subscribe("/kio/users", {});
+                },
+                disconnected: function() {
+                    console.log("disconnected");
+                },
+                broken: function(sessionLost, wasConnected, err, msg) {
+                    console.log("broken", sessionLost, wasConnected, err, msg);
+                },
+                subscription: function(success, subscription, err) {
+                    console.log("subscription", success, subscription, err);
+                },
+                published: function(success, err, res) {
+                    console.log("published", success, err, res);
+                }
+            });
+            ps.connect({username: "flo"});
+        });
+    </script>
+    
+</head>
+<body>
+
+</body>
+</html>
