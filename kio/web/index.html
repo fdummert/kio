@@ -1,37 +1,78 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <script src="js/dojo/dojo.js.uncompressed.js"></script>
-    <script type="text/javascript">
-        require(["zeos/pubSub"], function(PubSub) {
-            var ps = new PubSub();
-            ps.configure("http://localhost:8080/kio/cometd", {
-                initialized: function(success, clientId, err, msg) {
-                    console.log("init", success, clientId, err, msg);
-                },
-                connected: function() {
-                    console.log("connected");
-                    ps.subscribe("/kio/users", {});
-                },
-                disconnected: function() {
-                    console.log("disconnected");
-                },
-                broken: function(sessionLost, wasConnected, err, msg) {
-                    console.log("broken", sessionLost, wasConnected, err, msg);
-                },
-                subscription: function(success, subscription, err) {
-                    console.log("subscription", success, subscription, err);
-                },
-                published: function(success, err, res) {
-                    console.log("published", success, err, res);
-                }
-            });
-            ps.connect({username: "flo"});
-        });
-    </script>
-    
-</head>
-<body>
-
-</body>
+    <head>
+        <script>
+            var isomorphicDir = "js/isomorphic/";
+        </script>
+        <script src=js/isomorphic/system/modules/ISC_Core.js></script>
+        <script src=js/isomorphic/system/modules/ISC_Foundation.js></script>
+        <script src=js/isomorphic/system/modules/ISC_Containers.js></script>
+        <script src=js/isomorphic/system/modules/ISC_Grids.js></script>
+        <script src=js/isomorphic/system/modules/ISC_Forms.js></script>
+        <script src=js/isomorphic/system/modules/ISC_DataBinding.js></script> 
+        <script src=js/isomorphic/skins/Enterprise/load_skin.js></SCRIPT> 
+        <script src="js/dojo/dojo.js.uncompressed.js"></script>
+    </head>
+    <body>
+        <script>
+            require([ "zeos/pubSubManager", "zeos/kio/messages", "require" ], function(PubSubManager, msgs) {
+                var psm = new PubSubManager("http://localhost:8080/kio/cometd", null, {
+                    initialized : function(success, clientId, err, msg) {
+                        console.log("init", success, clientId, err, msg);
+                        if (!success) {
+                            if (err && err.indexOf("403:") == 0)
+                                err = msgs.errLogin;
+                            loginForm.getField("feedback").setValue("<span style='color:red'>" + err + "</span>");                                
+                        }
+                        else
+                            loginWin.hide();
+                    },
+                    connected : function() {
+                        console.log("connected");
+                    },
+                    disconnected : function() {
+                        loginWin.show();
+                    },
+                    broken : function(sessionLost, wasConnected, err, msg) {
+                        console.log("broken", sessionLost, wasConnected, err, msg);
+                    }
+                });
+                psm.registerMessageListener("/kio/users", null, {
+                    connected: function() {
+                        require(["zeos/kio/start"], function(start) {
+                            start.execute();
+                        });
+                    }
+                });
+                isc.Window.create({
+                    ID: "loginWin",
+                    title: "Login",
+                    autoSize: true,
+                    autoCenter: true,
+                    isModal: true,
+                    canDragReposition: false,
+                    showMinimizeButton: false,
+                    showCloseButton: false,
+                    items: [
+                        isc.DynamicForm.create({
+                            ID: "loginForm",
+                            padding: 10,
+                            saveOnEnter: true,
+                            autoFocus: true,
+                            fields: [
+                                { name: "username", title: msgs.username },
+                                { name: "password", title: msgs.password, type: "password" },
+                                { editorType: "SubmitItem", title: msgs.login, endRow: false },
+                                { name: "feedback", showTitle: false, type: "blurb", startRow: false }
+                            ],
+                            submitValues: function(values) {
+                                loginForm.getField("feedback").setValue("");  
+                                psm.start(loginForm.getValues());
+                            }
+                        })
+                    ]
+                });
+            });            
+        </script>
+    </body>
 </html>

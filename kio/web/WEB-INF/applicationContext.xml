@@ -8,6 +8,6 @@
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
     ">
     <context:component-scan base-package="de.zeos.cometd"/>
-
+    <util:properties id="bootstrapProperties" location="classpath:bootstrap.properties"/>
     <import resource="dbContext.xml"/>
 </beans>

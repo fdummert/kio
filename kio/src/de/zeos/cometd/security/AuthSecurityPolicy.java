@@ -39,6 +39,7 @@ public class AuthSecurityPolicy implements SecurityPolicy {
             session.setAttribute(AUTH_KEY, auth);
             ServerMessage.Mutable handshakeReply = message.getAssociated();
             ext = handshakeReply.getExt(true);
+            ext.put(AUTH_KEY, auth);
         } catch (AuthenticationException e) {
             return false;
         }
