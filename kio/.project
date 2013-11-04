@@ -44,7 +44,7 @@
 	<variableList>
 		<variable>
 			<name>copy_PROJECT_LOC</name>
-			<value>$%7BPARENT-1-PROJECT_LOC%7D/comet-server</value>
+			<value>$%7BPARENT-1-PROJECT_LOC%7D/kio</value>
 		</variable>
 	</variableList>
 </projectDescription>

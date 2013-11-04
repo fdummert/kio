@@ -5,7 +5,7 @@
     <script type="text/javascript">
         require(["zeos/pubSub"], function(PubSub) {
             var ps = new PubSub();
-            ps.configure("http://localhost:8080/comet-server/cometd", {
+            ps.configure("http://localhost:8080/kio/cometd", {
                 initialized: function(success, clientId, err, msg) {
                     console.log("init", success, clientId, err, msg);
                 },

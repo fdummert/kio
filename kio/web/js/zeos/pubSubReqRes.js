@@ -4,7 +4,7 @@ define(function() {
             throw "PubSubRequestResponse must be instantiated: new PubSubRequestResponse()";
         
         var pendingRequests = {};
-        var ID_FIELD = "requestId" || idField;
+        var ID_FIELD = idField || "requestId";
         
         function ReqResMessageListener(listener) {
             this.messageReceived = function(topic, msg) {
