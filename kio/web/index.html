@@ -3,6 +3,7 @@
     <head>
         <script>
             var isomorphicDir = "js/isomorphic/";
+            isc_useSimpleNames = false;
         </script>
         <script src=js/isomorphic/system/modules/ISC_Core.js></script>
         <script src=js/isomorphic/system/modules/ISC_Foundation.js></script>
@@ -15,8 +16,11 @@
     </head>
     <body>
         <script>
-            require([ "zeos/pubSubManager", "zeos/kio/messages", "require" ], function(PubSubManager, msgs) {
-                var psm = new PubSubManager("http://localhost:8080/kio/cometd", null, {
+            isc.setAutoDraw(false);
+            require([ "zeos/cometd/cometdManager", "zeos/kio/messages", "require" ], function(CometDManager, msgs, require) {
+                var mainApp = null;
+                var warnImg = isc.Img.create({ size: 32, src: "[SKIN]Dialog/warn.png", autoDraw: true, left: -1000 });
+                var cm = new CometDManager("http://localhost:8080/kio/cometd", null, {
                     initialized : function(success, clientId, err, msg) {
                         console.log("init", success, clientId, err, msg);
                         if (!success) {
@@ -24,24 +28,56 @@
                                 err = msgs.errLogin;
                             loginForm.getField("feedback").setValue("<span style='color:red'>" + err + "</span>");                                
                         }
-                        else
+                        else {
                             loginWin.hide();
-                    },
-                    connected : function() {
-                        console.log("connected");
+                            if (!mainApp) {
+                                require(["zeos/kio/app"], function(app) {
+                                    mainApp = app.start();
+                                });
+                            }
+                        }
                     },
                     disconnected : function() {
                         loginWin.show();
+                        if (mainApp != null) {
+                            mainApp.destroy();
+                            mainApp = null;
+                        }
+                    },
+                    connected: function() {
+                        var brokenWin = isc.Canvas.getById("brokenWin");
+                        if (brokenWin) {
+                            warnImg.deparent();
+                            brokenWin.destroy();
+                        }
                     },
                     broken : function(sessionLost, wasConnected, err, msg) {
-                        console.log("broken", sessionLost, wasConnected, err, msg);
-                    }
-                });
-                psm.registerMessageListener("/kio/users", null, {
-                    connected: function() {
-                        require(["zeos/kio/start"], function(start) {
-                            start.execute();
-                        });
+                        if (wasConnected) {
+                            isc.Window.create({
+                                ID: "brokenWin",
+                                height: 80,
+                                width: 300,
+                                autoCenter: true,
+                                isModal: true,
+                                canDragReposition: false,
+                                showMinimizeButton: false,
+                                showCloseButton: false,
+                                showTitle: false,
+                                showHeaderIcon: false,
+                                items: 
+                                    isc.HLayout.create({
+                                        margin: 10,
+                                        height: 32,
+                                        membersMargin: 10,
+                                        members: [
+                                            warnImg,
+                                            isc.Label.create({height: 32, width: "*", contents: msgs.errConnection})
+                                        ]
+                                    })
+                                
+                            });
+                            brokenWin.show();
+                        }
                     }
                 });
                 isc.Window.create({
@@ -53,7 +89,7 @@
                     canDragReposition: false,
                     showMinimizeButton: false,
                     showCloseButton: false,
-                    items: [
+                    items:
                         isc.DynamicForm.create({
                             ID: "loginForm",
                             padding: 10,
@@ -67,11 +103,11 @@
                             ],
                             submitValues: function(values) {
                                 loginForm.getField("feedback").setValue("");  
-                                psm.start(loginForm.getValues());
+                                cm.start(loginForm.getValues());
                             }
                         })
-                    ]
                 });
+                loginWin.show();
             });            
         </script>
     </body>

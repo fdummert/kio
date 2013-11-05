@@ -1,8 +1,9 @@
 define({
-    execute: function() {
-        isc.HLayout.create({
+    start: function() {
+        return isc.HLayout.create({
             width: "100%",
             height: "100%",
+            autoDraw: true,
             members: [
                 isc.Label.create({
                     contents: "Navigation",
