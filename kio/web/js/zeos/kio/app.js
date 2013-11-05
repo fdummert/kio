@@ -5,13 +5,13 @@ define({
             height: "100%",
             autoDraw: true,
             members: [
-                isc.Label.create({
-                    contents: "Navigation",
-                    align: "center",
-                    overflow: "hidden",
+                isc.ListGrid.create({
+                    ID: "navigation",
                     width: "30%",
                     showResizeBar: true,
-                    border: "1px solid blue"
+                    border: "1px solid blue",
+                    dataSource: navigationDS,
+                    autoFetchData: true
                 }),
                 isc.VLayout.create({
                     width: "70%",

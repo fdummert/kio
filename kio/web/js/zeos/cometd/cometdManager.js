@@ -20,8 +20,7 @@ define(["./cometd"], function(CometD) {
             initialized: function(successful, clientId, error, msg) {
                 if (successful) {
                     var auth = getAuthorization(msg);
-                    var props = auth.properties;
-                    initialize(clientId, props);
+                    initialize(clientId, auth);
                 } else {
                     status = CometDManager.Status.DISCONNECTED;
                 }

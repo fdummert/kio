@@ -17,7 +17,7 @@
     <body>
         <script>
             isc.setAutoDraw(false);
-            require([ "zeos/cometd/cometdManager", "zeos/kio/messages", "require" ], function(CometDManager, msgs, require) {
+            require([ "zeos/cometd/cometdManager", "zeos/kio/messages", "require", "zeos/kio/dataSources" ], function(CometDManager, msgs, require, dsFactory) {
                 var mainApp = null;
                 var warnImg = isc.Img.create({ size: 32, src: "[SKIN]Dialog/warn.png", autoDraw: true, left: -1000 });
                 var cm = new CometDManager("http://localhost:8080/kio/cometd", null, {
@@ -80,6 +80,7 @@
                         }
                     }
                 });
+                dsFactory(cm);
                 isc.Window.create({
                     ID: "loginWin",
                     title: "Login",

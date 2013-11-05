@@ -1,6 +1,7 @@
 package de.zeos.cometd.security.service;
 
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
 
 import javax.annotation.PostConstruct;
@@ -38,7 +39,8 @@ public class SecurityService {
         }
         if (credentials.equals(this.adminCredentials)) {
             Authorization auth = new Authorization();
-            auth.setChannels(Collections.singleton("/kio/users"));
+            auth.setUsername(credentials.getUsername());
+            auth.setChannels(new HashSet<String>(Arrays.asList("/kio/ds/**/" + credentials.getUsername())));
             return auth;
         }
         throw new AuthenticationException();
