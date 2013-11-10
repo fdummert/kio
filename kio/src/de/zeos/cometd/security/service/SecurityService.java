@@ -1,35 +1,36 @@
 package de.zeos.cometd.security.service;
 
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Properties;
+import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+
+import com.mongodb.DBRef;
 
 import de.zeos.cometd.security.AuthenticationException;
 import de.zeos.cometd.security.Authorization;
 import de.zeos.cometd.security.Credentials;
 import de.zeos.cometd.security.Digester;
+import de.zeos.cometd.security.model.Menu;
+import de.zeos.cometd.security.model.Right;
+import de.zeos.cometd.security.model.User;
 
 @Service
 public class SecurityService {
     @Inject
     private MongoOperations ops;
-    @Inject
-    @Named("bootstrapProperties")
-    private Properties properties;
+    @Value("#{appProperties.dsChannelPrefix}")
+    private String dsChannelPrefix;
     private Digester digester = new Digester("SHA-256", 1024);
-    private Credentials adminCredentials;
-
-    @PostConstruct
-    private void init() {
-        this.adminCredentials = new Credentials(this.properties.getProperty("admin.username"), this.properties.getProperty("admin.pwd"));
-    }
 
     public Authorization authenticate(Credentials credentials) throws AuthenticationException {
         if (credentials == null)
@@ -37,12 +38,33 @@ public class SecurityService {
         if (credentials.getPassword() != null) {
             credentials.setPassword(this.digester.digest(credentials.getPassword()));
         }
-        if (credentials.equals(this.adminCredentials)) {
-            Authorization auth = new Authorization();
-            auth.setUsername(credentials.getUsername());
-            auth.setChannels(new HashSet<String>(Arrays.asList("/kio/ds/**/" + credentials.getUsername())));
-            return auth;
+        User user = this.ops.findById(credentials.getUsername(), User.class);
+        if (user == null)
+            throw new AuthenticationException();
+
+        Authorization auth = new Authorization();
+        auth.setUsername(credentials.getUsername());
+        if (user.isAdmin()) {
+            List<Right> rights = this.ops.findAll(Right.class);
+            auth.setRights(new HashSet<Right>(rights));
+        } else {
+
         }
-        throw new AuthenticationException();
+        HashSet<String> channels = new HashSet<String>();
+        HashSet<DBRef> rightIds = new HashSet<>();
+        for (Right r : auth.getRights()) {
+            for (String ch : r.getChannels()) {
+                channels.add(ch.replace("${user}", user.getId()));
+            }
+            for (String ds : r.getDataSources()) {
+                channels.add(this.dsChannelPrefix + "/" + ds + "/*/" + user.getId());
+            }
+            rightIds.add(new DBRef(((MongoTemplate) this.ops).getDb(), "right", r.getId()));
+        }
+        auth.setChannels(channels);
+
+        List<Menu> menus = this.ops.find(Query.query(Criteria.where("right").in(rightIds)).with(new Sort(Direction.ASC, "idx")), Menu.class);
+        auth.setMenus(menus);
+        return auth;
     }
 }

@@ -8,27 +8,40 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
         sendMetaData: true,
         metaDataPrefix: "_",
         dataSourceRootChannel: "/org/zeos/cometd/ds",
-        dataSourceName: null,
         dataSourceRequestChannel: null,
         dataSourceResponseChannel: null,
         dataSourcePushChannel: null,
-        requestClass: null,
+        requestClass: "de.zeos.ds.DataSourceRequest",
         timeout: 10000,
         scope: null,
         scopeResolver: null,
+        messageResolver: null,
         pushScopes: null,
         cm: null,
         
         transformRequest: function(dsRequest) {
             function DSResponseListener(ds, requestId) {
                 this.success = function(dsResponse) {
+                    if (dsResponse.status == isc.DSResponse.STATUS_FAILURE) {
+                        if (this.messageResolver && dsResponse.data) {
+                            var err = this.messageResolver(dsResponse.data);
+                            dsResponse.data = err || dsResponse.data;
+                        }
+                    } else if (dsResponse.status == isc.DSResponse.STATUS_VALIDATION_ERROR && dsResponse.errors && this.messageResolver) {
+                        for (var field in dsResponse.errors) {
+                            var err = this.messageResolver(dsResponse.errors[field]);
+                            dsResponse.errors[field] = err || dsResponse.errors[field];
+                        }
+                    } else if (dsResponse.status == isc.DSResponse.STATUS_SUCCESS) {
+                        if (dsResponse.data != null)
+                            dsResponse.data = ds.recordsFromObjects(dsResponse.data);
+                    }
                     ds.processResponse(requestId, dsResponse);
                 };
                 this.timeout = function() {
                     var dsResponse = {
                         status: isc.DSResponse.STATUS_SERVER_TIMEOUT
                     };
-                    dsResponse.data = ds.recordsFromObjects(dsResponse.data);
                     ds.processResponse(requestId, dsResponse);
                 };
             }
@@ -39,14 +52,11 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                     var map = {};
                     
                     map[this.metaDataPrefix + "operationType"] = "operationType";
-                    map[this.metaDataPrefix + "operationId"] = "operationId";
                     map[this.metaDataPrefix + "startRow"] = "startRow";
                     map[this.metaDataPrefix + "endRow"] = "endRow";
                     map[this.metaDataPrefix + "sortBy"] = "sortBy";
-                    map[this.metaDataPrefix + "useStrictJSON"] = "useStrictJSON";
                     map[this.metaDataPrefix + "textMatchStyle"] = "textMatchStyle";
                     map[this.metaDataPrefix + "oldValues"] = "oldValues";
-                    map[this.metaDataPrefix + "componentId"] = "componentId";
                     map[this.metaDataPrefix + "parentNode"] = "parentNode";
 
                     this.parameterNameMap = map;
@@ -86,7 +96,7 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
                         dsResponse.data = that.recordsFromObjects(dsResponse.data);
                         if (that.processPushResponse && isc.isA.Function(that.processPushResponse)) {
                             if (that.processPushResponse(topic, dsResponse) === true) {
-                                that.updateCaches(dsReponse);
+                                that.updateCaches(dsResponse);
                                 if (that.processedPushResponse && isc.isA.Function(that.processedPushResponse)) {
                                     that.processedPushResponse(topic, dsResponse);
                                 }
@@ -112,7 +122,7 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
         },
         
         getChannel: function(infix) {
-            return (this.dataSourceRootChannel + infix + (this.dataSourceName != null ? "/" + this.dataSourceName : ""));
+            return this.dataSourceRootChannel + infix + "/" + this.name;
         }
     });
     return null;

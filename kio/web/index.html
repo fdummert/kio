@@ -29,13 +29,15 @@
                             loginForm.getField("feedback").setValue("<span style='color:red'>" + err + "</span>");                                
                         }
                         else {
+                            console.log("logged in", cm.getAppProperties());
                             loginWin.hide();
                             if (!mainApp) {
                                 require(["zeos/kio/app"], function(app) {
-                                    mainApp = app.start();
+                                    mainApp = app.start(cm);
                                 });
                             }
                         }
+                        loginForm.getField("submit").enable();
                     },
                     disconnected : function() {
                         loginWin.show();
@@ -99,11 +101,12 @@
                             fields: [
                                 { name: "username", title: msgs.username },
                                 { name: "password", title: msgs.password, type: "password" },
-                                { editorType: "SubmitItem", title: msgs.login, endRow: false },
+                                { name: "submit", editorType: "SubmitItem", title: msgs.login, endRow: false },
                                 { name: "feedback", showTitle: false, type: "blurb", startRow: false }
                             ],
                             submitValues: function(values) {
-                                loginForm.getField("feedback").setValue("");  
+                                loginForm.getField("feedback").setValue("");
+                                loginForm.getField("submit").disable();
                                 cm.start(loginForm.getValues());
                             }
                         })

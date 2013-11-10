@@ -23,7 +23,7 @@ import de.zeos.cometd.security.service.SecurityService;
 @Component
 public class AuthSecurityPolicy implements SecurityPolicy {
 
-    private static final String AUTH_KEY = "de.zeos.cometd.security";
+    public static final String AUTH_KEY = "de.zeos.cometd.security";
 
     @Inject
     private SecurityService securityService;
