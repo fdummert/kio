@@ -53,11 +53,16 @@ public class Configurer implements DestructionAwareBeanPostProcessor, ServletCon
         this.processor.deprocessCallbacks(bean);
     }
 
+    @Bean
+    public JacksonJSONContext jacksonJSONContext() {
+        return new JacksonJSONContext();
+    }
+
     @Bean(initMethod = "start", destroyMethod = "stop")
     public BayeuxServer bayeuxServer() {
         BayeuxServerImpl bayeux = new BayeuxServerImpl();
         bayeux.setOption(BayeuxServerImpl.LOG_LEVEL, "3");
-        bayeux.setOption(BayeuxServerImpl.JSON_CONTEXT, new JacksonJSONContext());
+        bayeux.setOption(BayeuxServerImpl.JSON_CONTEXT, jacksonJSONContext());
         bayeux.setTransports(new ArrayList<ServerTransport>(Arrays.asList(new WebSocketTransport(bayeux), new JSONTransport(bayeux))));
         return bayeux;
     }

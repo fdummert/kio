@@ -22,6 +22,7 @@ public abstract class AbstractDataSourceService {
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected void receiveOnDsChannel(ServerSession remote, Mutable message) {
         String prefix = getDsChannelPrefix();
         String topic = message.getChannel();
@@ -35,11 +36,11 @@ public abstract class AbstractDataSourceService {
             try {
                 dsClass = ClassUtils.forName(getDsPackage() + "." + StringUtils.capitalize(dsName), ClassUtils.getDefaultClassLoader());
             } catch (ClassNotFoundException | LinkageError e) {
-                throw new DataSourceException("error.ds.notFound");
+                throw new DataSourceException("errDSNotFound");
             }
             AbstractDataSource ds = (AbstractDataSource) dsClass.getConstructor(Authorization.class, MongoOperations.class).newInstance(remote.getAttribute(AuthSecurityPolicy.AUTH_KEY), this.ops);
             if (!ds.getAllowedOperations().contains(req.getOperationType()))
-                throw new DataSourceException("error.ds.operation.notAllowed");
+                throw new DataSourceException("errDSOperationNotAllowed");
 
             switch (req.getOperationType()) {
             case fetch:

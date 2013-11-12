@@ -7,29 +7,41 @@ define(["./messages", "require"], function(msgs, require) {
             
             var currentModule = null;
             
+            var specialFunctions = {
+                logout: function() { cm.stop(); }
+            }
+            
             for (var i = 0; i < props.menus.length; i++) {
                 var menu = props.menus[i];
                 if (cat != menu.category) {
                     cat = menu.category;
-                    navigation.push(isc.Label.create({contents: "<span style='font-size:16px;font-weight:bold'>" + msgs[cat] + "</span>", height: 20}));
+                    var text = msgs[cat] || "&nbsp;";
+                    var h = msgs[cat] ? 20 : "*";
+                    navigation.push(isc.Label.create({contents: "<span style='font-size:16px;font-weight:bold'>" + text + "</span>", height: h}));
                 }
-                navigation.push(isc.Button.create({title: msgs[menu.id], width: 250, height: 20, 
-                    click: function() {
-                        if (currentModule && currentModule.onDestroy) {
-                            var ret = currentModule.onDestroy();
-                            if (ret === false)
-                                return;
+                (function add(menu) {
+                    navigation.push(isc.Button.create({title: msgs[menu.id], width: 250, height: 20, 
+                        click: function() {
+                            if (currentModule && currentModule.onDestroy) {
+                                var ret = currentModule.onDestroy();
+                                if (ret === false)
+                                    return;
+                            }
+                            for (var i = 0; i < content.members.length; i++) {
+                                var member = content.members[i];
+                                member.destroy();
+                            }
+                            if (specialFunctions[menu.id]) {
+                                specialFunctions[menu.id]();
+                            } else {
+                                require(["./modules/" + menu.id], function(mod) {
+                                    currentModule = mod;
+                                    content.setMembers(mod.create(cm));
+                                });
+                            }
                         }
-                        for (var i = 0; i < content.members.length; i++) {
-                            var member = content.members[i];
-                            member.destroy();
-                        }
-                        require(["./modules/" + menu.id], function(mod) {
-                            currentModule = mod;
-                            content.setMembers(mod.create(cm));
-                        });
-                    }
-                }));
+                    }));
+                })(menu);
             };
             
             return isc.HLayout.create({
@@ -48,8 +60,9 @@ define(["./messages", "require"], function(msgs, require) {
                     isc.VLayout.create({
                         ID: "content",
                         width: "*",
+                        layoutMargin: 10,   
                         members: [
-                            isc.Label.create({contents: "temp"})
+                            isc.Label.create( { contents: msgs.welcome } )
                         ]
                     })
                 ]

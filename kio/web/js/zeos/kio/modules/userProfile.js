@@ -3,45 +3,41 @@ define(["../messages"], function(msgs) {
         create: function(cm) {
             var list = [
                 isc.ListGrid.create({
-                    dataSource: userAdminDS,
+                    dataSource: userProfileDS,
                     autoFetchData: true,
                     canRemoveRecords: true,
-                    recordCanRemoveProperty: "enabled",
                     warnOnRemoval: true,
                     warnOnRemovalMessage: msgs.warnRemove,
                     showResizeBar: true,
                     fields: [
-                        { name: "id", title: msgs.username },
-                        { name: "firstName", title: msgs.firstName },
-                        { name: "lastName", title: msgs.lastName },
-                        { name: "email", title: msgs.email }
+                        { name: "id", title: msgs.name }
                     ],
                     recordClick: function(viewer, rec) {
-                        userAdminForm.editRecord(rec);
+                        userProfileForm.editRecord(rec);
                     }
                 }),
                 isc.DynamicForm.create({
-                    ID: "userAdminForm",
-                    dataSource: userAdminDS,
-                    useAllDataSourceFields: true,
+                    ID: "userProfileForm",
+                    dataSource: userProfileDS,
                     fields: [
-                        { name: "profile", optionDataSource: "userProfileDS", valueField: "id" }
+                        { name: "id" },
+                        { name: "rights", multipleAppearance: "picklist", optionDataSource: rightsDS, valueField: "id" }
                     ]
                 }),
                 isc.HStack.create({
                     members: [
                         isc.Button.create({
                             title: msgs.add,
-                            click: function() { userAdminForm.editNewRecord(); }
+                            click: function() { userProfileForm.editNewRecord(); }
                         }),
                         isc.Button.create({
                             title: msgs.save,
-                            click: function() { userAdminForm.saveData(); }
+                            click: function() { userProfileForm.saveData(); }
                         })
                     ]
                 })
             ];
-            userAdminForm.editNewRecord();
+            userProfileForm.editNewRecord();
             return list;
         }
     };

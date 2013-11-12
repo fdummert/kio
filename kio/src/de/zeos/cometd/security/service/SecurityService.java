@@ -57,10 +57,11 @@ public class SecurityService {
                 channels.add(ch.replace("${user}", user.getId()));
             }
             for (String ds : r.getDataSources()) {
-                channels.add(this.dsChannelPrefix + "/" + ds + "/*/" + user.getId());
+                channels.add(this.dsChannelPrefix + "/*/" + ds + "/" + user.getId());
             }
             rightIds.add(new DBRef(((MongoTemplate) this.ops).getDb(), "right", r.getId()));
         }
+        rightIds.add(null);
         auth.setChannels(channels);
 
         List<Menu> menus = this.ops.find(Query.query(Criteria.where("right").in(rightIds)).with(new Sort(Direction.ASC, "idx")), Menu.class);

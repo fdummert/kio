@@ -10,6 +10,13 @@ public class Right {
     private List<String> channels = new ArrayList<>();
     private List<String> dataSources = new ArrayList<>();
 
+    public Right() {
+    }
+
+    public Right(String id) {
+        this.id = id;
+    }
+
     public String getId() {
         return this.id;
     }
@@ -49,4 +56,20 @@ public class Right {
     public void setDataSources(List<String> dataSources) {
         this.dataSources = dataSources;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (obj == this)
+            return true;
+        if (!(obj instanceof Right))
+            return false;
+        return ((Right) obj).getId().equals(this.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.id.hashCode();
+    };
 }

@@ -2,7 +2,7 @@ package de.zeos.ds;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DataSourceRequest {
+public class DataSourceRequest<D> {
 
     private String requestId;
     @JsonProperty("_operationType")
@@ -15,6 +15,7 @@ public class DataSourceRequest {
     private Integer endRow;
     @JsonProperty("_sortBy")
     private SortSpecifier[] sortBy;
+    private D data;
 
     public String getRequestId() {
         return this.requestId;
@@ -62,5 +63,13 @@ public class DataSourceRequest {
 
     public void setSortBy(SortSpecifier[] sortBy) {
         this.sortBy = sortBy;
+    }
+
+    public D getData() {
+        return this.data;
+    }
+
+    public void setData(D data) {
+        this.data = data;
     }
 }

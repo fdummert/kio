@@ -1,11 +1,18 @@
 package de.zeos.cometd.security.model;
 
+import org.springframework.data.mongodb.core.mapping.DBRef;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import de.zeos.cometd.security.model.json.IdSerializer;
+
 public class User {
     private String id;
     private String password;
     private String firstName;
     private String lastName;
     private String email;
+    @DBRef
     private Profile profile;
     private boolean admin;
 
@@ -49,6 +56,7 @@ public class User {
         this.email = email;
     }
 
+    @JsonSerialize(using = IdSerializer.class)
     public Profile getProfile() {
         return this.profile;
     }

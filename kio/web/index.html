@@ -5,12 +5,12 @@
             var isomorphicDir = "js/isomorphic/";
             isc_useSimpleNames = false;
         </script>
-        <script src=js/isomorphic/system/modules/ISC_Core.js></script>
-        <script src=js/isomorphic/system/modules/ISC_Foundation.js></script>
-        <script src=js/isomorphic/system/modules/ISC_Containers.js></script>
-        <script src=js/isomorphic/system/modules/ISC_Grids.js></script>
-        <script src=js/isomorphic/system/modules/ISC_Forms.js></script>
-        <script src=js/isomorphic/system/modules/ISC_DataBinding.js></script> 
+        <script src=js/isomorphic/system/modules-debug/ISC_Core.js></script>
+        <script src=js/isomorphic/system/modules-debug/ISC_Foundation.js></script>
+        <script src=js/isomorphic/system/modules-debug/ISC_Containers.js></script>
+        <script src=js/isomorphic/system/modules-debug/ISC_Grids.js></script>
+        <script src=js/isomorphic/system/modules-debug/ISC_Forms.js></script>
+        <script src=js/isomorphic/system/modules-debug/ISC_DataBinding.js></script> 
         <script src=js/isomorphic/skins/Enterprise/load_skin.js></SCRIPT> 
         <script src="js/dojo/dojo.js.uncompressed.js"></script>
     </head>
@@ -108,6 +108,8 @@
                                 loginForm.getField("feedback").setValue("");
                                 loginForm.getField("submit").disable();
                                 cm.start(loginForm.getValues());
+                                loginForm.clearValues();
+                                loginForm.focusInItem("username");
                             }
                         })
                 });

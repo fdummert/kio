@@ -20,33 +20,40 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
         cm: null,
         
         transformRequest: function(dsRequest) {
+            var that = this;
             function DSResponseListener(ds, requestId) {
                 this.success = function(dsResponse) {
                     if (dsResponse.status == isc.DSResponse.STATUS_FAILURE) {
-                        if (this.messageResolver && dsResponse.data) {
-                            var err = this.messageResolver(dsResponse.data);
+                        if (that.messageResolver && dsResponse.data) {
+                            var err = that.messageResolver(dsResponse.data);
                             dsResponse.data = err || dsResponse.data;
                         }
-                    } else if (dsResponse.status == isc.DSResponse.STATUS_VALIDATION_ERROR && dsResponse.errors && this.messageResolver) {
+                    } else if (dsResponse.status == isc.DSResponse.STATUS_VALIDATION_ERROR && dsResponse.errors && that.messageResolver) {
                         for (var field in dsResponse.errors) {
-                            var err = this.messageResolver(dsResponse.errors[field]);
+                            var err = that.messageResolver(dsResponse.errors[field]);
                             dsResponse.errors[field] = err || dsResponse.errors[field];
                         }
                     } else if (dsResponse.status == isc.DSResponse.STATUS_SUCCESS) {
                         if (dsResponse.data != null)
                             dsResponse.data = ds.recordsFromObjects(dsResponse.data);
                     }
+                    this.finished();
                     ds.processResponse(requestId, dsResponse);
                 };
                 this.timeout = function() {
                     var dsResponse = {
                         status: isc.DSResponse.STATUS_SERVER_TIMEOUT
                     };
+                    this.finished();
                     ds.processResponse(requestId, dsResponse);
+                };
+                this.finished = function() {
+                    isc.EH.hideClickMask("cometDS");
                 };
             }
         
-            var params = isc.addProperties({}, dsRequest.data, dsRequest.params);
+            var params = isc.addProperties({}, dsRequest.params);
+            params.data = isc.addProperties({}, params.data, dsRequest.data);
             if (this.sendMetaData) {
                 if (!this.parameterNameMap) {
                     var map = {};
@@ -82,6 +89,10 @@ define(["../cometdReqRes"], function(CometDRequestResponse) {
             var scope = this.scope;
             if (scope == null && this.scopeResolver != null && isc.isA.Function(this.scopeResolver)) {
                 scope = this.scopeResolver();
+            }
+            if (dsRequest.showPrompt === true) {
+                isc.EH.clickMaskProperties = { cursor: "wait" };
+                isc.EH.showClickMask(null, "hard", null, "cometDS");
             }
             var crr = new CometDRequestResponse(this.cm, reqChannel, resChannel, scope, this.timeout);
             crr.sendRequest(params, new DSResponseListener(this, dsRequest.requestId));
